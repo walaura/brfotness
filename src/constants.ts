@@ -14,14 +14,16 @@ export type Join = JoinPointer & {
 };
 
 export type Line = {
-  from: Join;
-  to: Join;
+  points: [Join, Join];
 };
 
-export type Board = {
-  lines: Set<Line>;
-  joins: Joins;
-  start: Join;
-  end: Join;
+export type Board = NonNullable<InputBoard> & {
   path: Set<Line>;
+};
+
+export type InputBoard = {
+  lines?: Set<Line>;
+  joins?: Joins;
+  start?: Join;
+  end?: Join;
 };

@@ -1,18 +1,28 @@
 import { Board } from "../constants";
 import { drawLine, drawDot } from "./helpers";
 
-const getCanvas = (): CanvasRenderingContext2D => {
-  const canvas = document.createElement("canvas");
+export const getCanvas = (id: number | string): HTMLCanvasElement => {
+  let canvas = document.getElementById(`cv-${id}`) as HTMLCanvasElement;
+  if (canvas) {
+    return canvas;
+  }
+  canvas = document.createElement("canvas");
   document.querySelector("x-canvas").appendChild(canvas);
   canvas.width = 400;
   canvas.height = 400;
-  const ctx = canvas.getContext("2d");
-  ctx.lineWidth = 1;
-  return ctx;
+  return canvas;
 };
 
-export const drawBoard = ({ lines, joins, start, end, path }: Board) => {
-  const ctx = getCanvas();
+export const drawBoard = (board: Board) => {
+  const ctx = getCanvas(Math.random()).getContext("2d");
+  drawBoardAt(ctx, board);
+};
+
+export const drawBoardAt = (
+  ctx: CanvasRenderingContext2D,
+  { lines, joins, start, end, path }: Board
+) => {
+  ctx.lineWidth = 1;
   // DRAW LINES
   for (let line of lines) {
     drawLine(ctx, line);

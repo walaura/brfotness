@@ -9,15 +9,20 @@
         margin: 0;
         padding: 0;
       }
+      x-input {
+        grid-area: b;
+        background: lightgrey;
+      }
       x-tools {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
         background: grey;
-        padding: 12px;
         width: 100%;
         display: block;
+        grid-area: a;
+        padding: 12px;
+      }
+      x-canvas {
+        grid-area: c;
+        overflow: scroll;
       }
       x-canvas canvas {
         border: 2px solid black;
@@ -25,10 +30,19 @@
         height: 200px;
         float: left;
       }
+      body {
+        display: grid;
+        width: 100vw;
+        grid-template:
+          "a a" min-content
+          "b c" / 1fr 1fr;
+        height: 100vh;
+      }
     </style>
   </head>
   <body>
-    <x-tools> </x-tools>
+    <x-tools></x-tools>
+    <x-input></x-input>
     <x-canvas> </x-canvas>
   </body>
 </html>

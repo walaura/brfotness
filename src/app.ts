@@ -1,8 +1,16 @@
-import { Join, Joins, JoinPointer, Line, Board } from "./constants";
-import { drawBoard } from "./draw/board";
+import { Join, Joins, JoinPointer, Line, Board, InputBoard } from "./constants";
+import { drawBoard, drawBoardAt, getCanvas } from "./draw/board";
+import { startInput } from "./draw/input";
 
-const joins: Joins = {};
-const lines: Set<Line> = new Set();
+const input: InputBoard = {
+  joins: {},
+  lines: new Set(),
+};
+declare module globalThis {
+  let input: InputBoard;
+}
+globalThis.input = input;
+const { joins, lines } = globalThis.input;
 
 // HARDCODE JOINS
 for (let x = 0; x <= 4; x++) {
@@ -31,9 +39,14 @@ for (let [key, join] of Object.entries(joins)) {
     if (nextLine == null) {
       continue;
     }
-    const line = {
-      from: join,
-      to: nextLine,
+    if (join.x === 1 && join.y === 0 && nextLine.x === 1 && nextLine.y === 1) {
+      continue;
+    }
+    if (join.x === 1 && join.y === 3 && nextLine.x === 1 && nextLine.y === 4) {
+      continue;
+    }
+    const line: Line = {
+      points: [join, nextLine],
     };
     lines.add(line);
     join.lines.add(line);
@@ -41,37 +54,29 @@ for (let [key, join] of Object.entries(joins)) {
   }
 }
 
-const START = findJoin({ x: 2, y: 2 });
-const END = findJoin({ x: 4, y: 0 });
+globalThis.input.start = findJoin({ x: 2, y: 2 });
+globalThis.input.end = findJoin({ x: 4, y: 0 });
 
 const getOtherJoinInLine = (line: Line, join: Join): Join => {
-  if (join !== line.from && join !== line.to) {
+  if (!line.points.includes(join)) {
     alert(12);
     throw "nooo";
   }
-
-  if (join === line.from) {
-    return line.to;
-  }
-  if (join === line.to) {
-    return line.from;
-  }
+  return line.points.filter((point) => point != join)[0];
 };
 
 const getNextLines = (path: Line[], join: Join) => {
   let taken: Join[] = [];
   path.forEach((line) => {
-    taken.push(line.from);
-    taken.push(line.to);
+    for (let point of line.points) {
+      taken.push(point);
+    }
   });
   taken = taken.filter((j) => j !== join);
   const lines = [...join.lines]
     .filter((line) => !path.includes(line))
     .filter((line) => {
-      if (taken.includes(line.from)) {
-        return false;
-      }
-      if (taken.includes(line.to)) {
+      if (taken.some((takenPoint) => line.points.includes(takenPoint))) {
         return false;
       }
       return true;
@@ -86,10 +91,10 @@ type Path = {
   isSolved: boolean;
 };
 
-let paths: Path[] = getNextLines([], START).map((line) => {
+let paths: Path[] = getNextLines([], globalThis.input.start).map((line) => {
   return {
     lines: [line],
-    at: getOtherJoinInLine(line, START),
+    at: getOtherJoinInLine(line, globalThis.input.start),
     isFinished: false,
     isSolved: false,
   };
@@ -121,23 +126,25 @@ const loop = () => {
         lines: [...path.lines, line],
         at: to,
         isFinished: false,
-        isSolved: to === END,
+        isSolved: to === globalThis.input.end,
       });
     }
   }
 
+  const tbd =
+    nextPaths.length -
+    nextPaths.filter((p) => p.isFinished || p.isSolved).length;
+
   console.log(`${nextPaths.length} paths total`);
-  console.log(
-    `${
-      nextPaths.length -
-      nextPaths.filter((p) => p.isFinished || p.isSolved).length
-    } paths TBD`
-  );
+  console.log(`${tbd} paths TBD`);
   console.log(`${nextPaths.filter((p) => p.isFinished).length} finished paths`);
   console.log(`${nextPaths.filter((p) => p.isSolved).length} solved paths`);
+  console.log(`${100 - (tbd / nextPaths.length) * 100}% solved`);
 
   paths = nextPaths;
 };
+
+startInput();
 
 const draw = () => {
   document.querySelector("x-canvas").innerHTML = "";
@@ -150,8 +157,8 @@ const draw = () => {
       lines,
       joins,
       path: new Set(path.lines),
-      start: START,
-      end: END,
+      start: globalThis.input.start,
+      end: globalThis.input.end,
     });
   }
 };

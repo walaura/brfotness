@@ -1,6 +1,9 @@
 import { DOT_SIZE, Join, Line, PADDING, SPACE } from "../constants";
 
-export const drawLine = (ctx: CanvasRenderingContext2D, { from, to }: Line) => {
+export const drawLine = (
+  ctx: CanvasRenderingContext2D,
+  { points: [from, to] }: Line
+) => {
   ctx.beginPath();
   ctx.moveTo(
     DOT_SIZE - PADDING + (from.x + 1) * SPACE,

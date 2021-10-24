@@ -130,6 +130,33 @@ exports.PADDING = 30;
 },{}],"draw/helpers.ts":[function(require,module,exports) {
 "use strict";
 
+var __read = this && this.__read || function (o, n) {
+  var m = typeof Symbol === "function" && o[Symbol.iterator];
+  if (!m) return o;
+  var i = m.call(o),
+      r,
+      ar = [],
+      e;
+
+  try {
+    while ((n === void 0 || n-- > 0) && !(r = i.next()).done) {
+      ar.push(r.value);
+    }
+  } catch (error) {
+    e = {
+      error: error
+    };
+  } finally {
+    try {
+      if (r && !r.done && (m = i["return"])) m.call(i);
+    } finally {
+      if (e) throw e.error;
+    }
+  }
+
+  return ar;
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -138,8 +165,10 @@ exports.drawDot = exports.drawLine = void 0;
 var constants_1 = require("../constants");
 
 var drawLine = function drawLine(ctx, _a) {
-  var from = _a.from,
-      to = _a.to;
+  var _b = __read(_a.points, 2),
+      from = _b[0],
+      to = _b[1];
+
   ctx.beginPath();
   ctx.moveTo(constants_1.DOT_SIZE - constants_1.PADDING + (from.x + 1) * constants_1.SPACE, constants_1.DOT_SIZE - constants_1.PADDING + (from.y + 1) * constants_1.SPACE);
   ctx.lineTo(constants_1.DOT_SIZE - constants_1.PADDING + (to.x + 1) * constants_1.SPACE, constants_1.DOT_SIZE - constants_1.PADDING + (to.y + 1) * constants_1.SPACE);
@@ -205,21 +234,34 @@ var __read = this && this.__read || function (o, n) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.drawBoard = void 0;
+exports.drawBoardAt = exports.drawBoard = exports.getCanvas = void 0;
 
 var helpers_1 = require("./helpers");
 
-var getCanvas = function getCanvas() {
-  var canvas = document.createElement("canvas");
+var getCanvas = function getCanvas(id) {
+  var canvas = document.getElementById("cv-" + id);
+
+  if (canvas) {
+    return canvas;
+  }
+
+  canvas = document.createElement("canvas");
   document.querySelector("x-canvas").appendChild(canvas);
   canvas.width = 400;
   canvas.height = 400;
-  var ctx = canvas.getContext("2d");
-  ctx.lineWidth = 1;
-  return ctx;
+  return canvas;
 };
 
-var drawBoard = function drawBoard(_a) {
+exports.getCanvas = getCanvas;
+
+var drawBoard = function drawBoard(board) {
+  var ctx = (0, exports.getCanvas)(Math.random()).getContext("2d");
+  (0, exports.drawBoardAt)(ctx, board);
+};
+
+exports.drawBoard = drawBoard;
+
+var drawBoardAt = function drawBoardAt(ctx, _a) {
   var e_1, _b, e_2, _c, e_3, _d;
 
   var lines = _a.lines,
@@ -227,7 +269,7 @@ var drawBoard = function drawBoard(_a) {
       start = _a.start,
       end = _a.end,
       path = _a.path;
-  var ctx = getCanvas();
+  ctx.lineWidth = 1;
 
   try {
     // DRAW LINES
@@ -292,8 +334,58 @@ var drawBoard = function drawBoard(_a) {
   }
 };
 
-exports.drawBoard = drawBoard;
-},{"./helpers":"draw/helpers.ts"}],"app.ts":[function(require,module,exports) {
+exports.drawBoardAt = drawBoardAt;
+},{"./helpers":"draw/helpers.ts"}],"draw/input.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.startInput = void 0;
+
+var board_1 = require("./board");
+
+var startInput = function startInput() {
+  var _a = globalThis.input,
+      joins = _a.joins,
+      lines = _a.lines,
+      start = _a.start,
+      end = _a.end;
+  var $input = (0, board_1.getCanvas)("input");
+  var ctx = $input.getContext("2d");
+  var mouseIn = false;
+  var ghostLine = null;
+  $input.addEventListener("mousemove", function (ev) {//console.log(ev);
+  });
+  $input.addEventListener("mouseenter", function (ev) {
+    mouseIn = true;
+    requestAnimationFrame(draw);
+  });
+  $input.addEventListener("mouseleave", function (ev) {
+    mouseIn = false;
+  });
+  document.querySelector("x-input").appendChild($input);
+
+  var draw = function draw() {
+    console.log("drawing");
+    (0, board_1.drawBoardAt)(ctx, {
+      lines: lines,
+      joins: joins,
+      path: new Set(),
+      start: start,
+      end: end
+    });
+
+    if (mouseIn) {
+      requestAnimationFrame(draw);
+    }
+  };
+
+  requestAnimationFrame(draw);
+};
+
+exports.startInput = startInput;
+},{"./board":"draw/board.ts"}],"app.ts":[function(require,module,exports) {
 "use strict";
 
 var __assign = this && this.__assign || function () {
@@ -374,8 +466,16 @@ Object.defineProperty(exports, "__esModule", {
 
 var board_1 = require("./draw/board");
 
-var joins = {};
-var lines = new Set(); // HARDCODE JOINS
+var input_1 = require("./draw/input");
+
+var input = {
+  joins: {},
+  lines: new Set()
+};
+globalThis.input = input;
+var _c = globalThis.input,
+    joins = _c.joins,
+    lines = _c.lines; // HARDCODE JOINS
 
 for (var x = 0; x <= 4; x++) {
   for (var y = 0; y <= 4; y++) {
@@ -400,10 +500,10 @@ var findJoin = function findJoin(_a) {
 
 try {
   // HC LINES
-  for (var _c = __values(Object.entries(joins)), _d = _c.next(); !_d.done; _d = _c.next()) {
-    var _e = __read(_d.value, 2),
-        key = _e[0],
-        join = _e[1];
+  for (var _d = __values(Object.entries(joins)), _e = _d.next(); !_e.done; _e = _d.next()) {
+    var _f = __read(_e.value, 2),
+        key = _f[0],
+        join = _f[1];
 
     var x = join.x,
         y = join.y;
@@ -423,9 +523,16 @@ try {
           continue;
         }
 
+        if (join.x === 1 && join.y === 0 && nextLine.x === 1 && nextLine.y === 1) {
+          continue;
+        }
+
+        if (join.x === 1 && join.y === 3 && nextLine.x === 1 && nextLine.y === 4) {
+          continue;
+        }
+
         var line = {
-          from: join,
-          to: nextLine
+          points: [join, nextLine]
         };
         lines.add(line);
         join.lines.add(line);
@@ -449,41 +556,53 @@ try {
   };
 } finally {
   try {
-    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+    if (_e && !_e.done && (_a = _d.return)) _a.call(_d);
   } finally {
     if (e_1) throw e_1.error;
   }
 }
 
-var START = findJoin({
+globalThis.input.start = findJoin({
   x: 2,
   y: 2
 });
-var END = findJoin({
+globalThis.input.end = findJoin({
   x: 4,
   y: 0
 });
 
 var getOtherJoinInLine = function getOtherJoinInLine(line, join) {
-  if (join !== line.from && join !== line.to) {
+  if (!line.points.includes(join)) {
     alert(12);
     throw "nooo";
   }
 
-  if (join === line.from) {
-    return line.to;
-  }
-
-  if (join === line.to) {
-    return line.from;
-  }
+  return line.points.filter(function (point) {
+    return point != join;
+  })[0];
 };
 
 var getNextLines = function getNextLines(path, join) {
   var taken = [];
   path.forEach(function (line) {
-    taken.push(line.from);
-    taken.push(line.to);
+    var e_3, _a;
+
+    try {
+      for (var _b = __values(line.points), _c = _b.next(); !_c.done; _c = _b.next()) {
+        var point = _c.value;
+        taken.push(point);
+      }
+    } catch (e_3_1) {
+      e_3 = {
+        error: e_3_1
+      };
+    } finally {
+      try {
+        if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+      } finally {
+        if (e_3) throw e_3.error;
+      }
+    }
   });
   taken = taken.filter(function (j) {
     return j !== join;
@@ -492,11 +611,9 @@ var getNextLines = function getNextLines(path, join) {
   var lines = __spreadArray([], __read(join.lines), false).filter(function (line) {
     return !path.includes(line);
   }).filter(function (line) {
-    if (taken.includes(line.from)) {
-      return false;
-    }
-
-    if (taken.includes(line.to)) {
+    if (taken.some(function (takenPoint) {
+      return line.points.includes(takenPoint);
+    })) {
       return false;
     }
 
@@ -506,17 +623,17 @@ var getNextLines = function getNextLines(path, join) {
   return lines;
 };
 
-var paths = getNextLines([], START).map(function (line) {
+var paths = getNextLines([], globalThis.input.start).map(function (line) {
   return {
     lines: [line],
-    at: getOtherJoinInLine(line, START),
+    at: getOtherJoinInLine(line, globalThis.input.start),
     isFinished: false,
     isSolved: false
   };
 });
 
 var loop = function loop() {
-  var e_3, _a, e_4, _b;
+  var e_4, _a, e_5, _b;
 
   var nextPaths = [];
 
@@ -545,55 +662,59 @@ var loop = function loop() {
       }
 
       try {
-        for (var lines_1 = (e_4 = void 0, __values(lines_2)), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
+        for (var lines_1 = (e_5 = void 0, __values(lines_2)), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
           var line = lines_1_1.value;
           var to = getOtherJoinInLine(line, path.at);
           nextPaths.push({
             lines: __spreadArray(__spreadArray([], __read(path.lines), false), [line], false),
             at: to,
             isFinished: false,
-            isSolved: to === END
+            isSolved: to === globalThis.input.end
           });
         }
-      } catch (e_4_1) {
-        e_4 = {
-          error: e_4_1
+      } catch (e_5_1) {
+        e_5 = {
+          error: e_5_1
         };
       } finally {
         try {
           if (lines_1_1 && !lines_1_1.done && (_b = lines_1.return)) _b.call(lines_1);
         } finally {
-          if (e_4) throw e_4.error;
+          if (e_5) throw e_5.error;
         }
       }
     }
-  } catch (e_3_1) {
-    e_3 = {
-      error: e_3_1
+  } catch (e_4_1) {
+    e_4 = {
+      error: e_4_1
     };
   } finally {
     try {
       if (paths_1_1 && !paths_1_1.done && (_a = paths_1.return)) _a.call(paths_1);
     } finally {
-      if (e_3) throw e_3.error;
+      if (e_4) throw e_4.error;
     }
   }
 
-  console.log(nextPaths.length + " paths total");
-  console.log(nextPaths.length - nextPaths.filter(function (p) {
+  var tbd = nextPaths.length - nextPaths.filter(function (p) {
     return p.isFinished || p.isSolved;
-  }).length + " paths TBD");
+  }).length;
+  console.log(nextPaths.length + " paths total");
+  console.log(tbd + " paths TBD");
   console.log(nextPaths.filter(function (p) {
     return p.isFinished;
   }).length + " finished paths");
   console.log(nextPaths.filter(function (p) {
     return p.isSolved;
   }).length + " solved paths");
+  console.log(100 - tbd / nextPaths.length * 100 + "% solved");
   paths = nextPaths;
 };
 
+(0, input_1.startInput)();
+
 var draw = function draw() {
-  var e_5, _a;
+  var e_6, _a;
 
   document.querySelector("x-canvas").innerHTML = "";
 
@@ -612,19 +733,19 @@ var draw = function draw() {
         lines: lines,
         joins: joins,
         path: new Set(path.lines),
-        start: START,
-        end: END
+        start: globalThis.input.start,
+        end: globalThis.input.end
       });
     }
-  } catch (e_5_1) {
-    e_5 = {
-      error: e_5_1
+  } catch (e_6_1) {
+    e_6 = {
+      error: e_6_1
     };
   } finally {
     try {
       if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
     } finally {
-      if (e_5) throw e_5.error;
+      if (e_6) throw e_6.error;
     }
   }
 };
@@ -645,7 +766,7 @@ $draw.onclick = function () {
 };
 
 document.querySelector("x-tools").appendChild($draw);
-},{"./draw/board":"draw/board.ts"}],"../../../../../usr/local/lib/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./draw/board":"draw/board.ts","./draw/input":"draw/input.ts"}],"../../../../../usr/local/lib/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
