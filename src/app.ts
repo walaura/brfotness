@@ -1,25 +1,10 @@
+import { drawDot, drawLine } from "./draw";
+import { DOT_SIZE, Join, JoinPointer, Line, PADDING, SPACE } from "./constants";
+
 let board = {};
 
 const canvas = document.getElementById("input") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d");
-
-const SPACE = 60;
-const DOT_SIZE = 10;
-const PADDING = 30;
-
-type JoinPointer = {
-  x: number;
-  y: number;
-};
-
-type Join = JoinPointer & {
-  lines: Set<Line>;
-};
-
-type Line = {
-  from: Join;
-  to: Join;
-};
 
 const joins: { [key: string]: Join } = {};
 const lines: Set<Line> = new Set();
@@ -67,49 +52,6 @@ for (let [key, join] of Object.entries(joins)) {
 const START = findJoin({ x: 2, y: 2 });
 const END = findJoin({ x: 4, y: 0 });
 
-// DRAW LINES
-for (let line of lines) {
-  const { from, to } = line;
-  ctx.beginPath();
-  ctx.moveTo(
-    DOT_SIZE - PADDING + (from.x + 1) * SPACE,
-    DOT_SIZE - PADDING + (from.y + 1) * SPACE
-  );
-  ctx.lineTo(
-    DOT_SIZE - PADDING + (to.x + 1) * SPACE,
-    DOT_SIZE - PADDING + (to.y + 1) * SPACE
-  );
-  ctx.stroke();
-}
-// JOINS
-for (let [_, join] of Object.entries(joins)) {
-  const { x, y } = join;
-  ctx.fillRect(
-    DOT_SIZE / 2 - PADDING + (x + 1) * SPACE,
-    DOT_SIZE / 2 - PADDING + (y + 1) * SPACE,
-    DOT_SIZE,
-    DOT_SIZE
-  );
-}
-
-let { x, y } = START;
-ctx.fillStyle = "blue";
-ctx.fillRect(
-  DOT_SIZE / 2 - PADDING + (x + 1) * SPACE,
-  DOT_SIZE / 2 - PADDING + (y + 1) * SPACE,
-  DOT_SIZE,
-  DOT_SIZE
-);
-
-let { x, y } = END;
-ctx.fillStyle = "yellow";
-ctx.fillRect(
-  DOT_SIZE / 2 - PADDING + (x + 1) * SPACE,
-  DOT_SIZE / 2 - PADDING + (y + 1) * SPACE,
-  DOT_SIZE,
-  DOT_SIZE
-);
-
 const getOtherJoinInLine = (line: Line, join: Join): Join => {
   if (join !== line.from && join !== line.to) {
     alert(12);
@@ -124,10 +66,7 @@ const getOtherJoinInLine = (line: Line, join: Join): Join => {
   }
 };
 
-ctx.fillStyle = "black";
-let solved = false;
-
-const getNextJoin = (join: Join): Join | null => {
+const getNextLine = (join: Join) => {
   let taken: Join[] = [];
   path.forEach((line) => {
     taken.push(line.from);
@@ -138,7 +77,6 @@ const getNextJoin = (join: Join): Join | null => {
   const lines = [...join.lines]
     .filter((line) => !path.has(line))
     .filter((line) => {
-      console.log(join, line);
       if (taken.includes(line.from)) {
         return false;
       }
@@ -151,30 +89,36 @@ const getNextJoin = (join: Join): Join | null => {
   if (line == null) {
     return;
   }
-  path.add(line);
-  return getOtherJoinInLine(line, join);
+  return line;
 };
 
 let next = START;
 for (let x = 0; x <= 12; x++) {
-  next = getNextJoin(next);
+  let line = getNextLine(next);
+  path.add(line);
+  try {
+    next = getOtherJoinInLine(line, next);
+  } catch (e) {
+    break;
+  }
   if (!next) {
-    alert("done");
-    x = 22;
+    break;
   }
 }
 
+// DRAW LINES
+for (let line of lines) {
+  drawLine(ctx, line);
+}
+for (let [_, join] of Object.entries(joins)) {
+  drawDot(ctx, join);
+}
+ctx.fillStyle = "blue";
+drawDot(ctx, START);
+ctx.fillStyle = "yellow";
+drawDot(ctx, END);
+
 ctx.strokeStyle = "lime";
 for (let line of path) {
-  const { from, to } = line;
-  ctx.beginPath();
-  ctx.moveTo(
-    DOT_SIZE - PADDING + (from.x + 1) * SPACE,
-    DOT_SIZE - PADDING + (from.y + 1) * SPACE
-  );
-  ctx.lineTo(
-    DOT_SIZE - PADDING + (to.x + 1) * SPACE,
-    DOT_SIZE - PADDING + (to.y + 1) * SPACE
-  );
-  ctx.stroke();
+  drawLine(ctx, line);
 }

@@ -117,7 +117,47 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"app.ts":[function(require,module,exports) {
+})({"constants.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.PADDING = exports.DOT_SIZE = exports.SPACE = void 0;
+exports.SPACE = 60;
+exports.DOT_SIZE = 10;
+exports.PADDING = 30;
+},{}],"draw.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.drawDot = exports.drawLine = void 0;
+
+var constants_1 = require("./constants");
+
+var drawLine = function drawLine(ctx, _a) {
+  var from = _a.from,
+      to = _a.to;
+  ctx.beginPath();
+  ctx.moveTo(constants_1.DOT_SIZE - constants_1.PADDING + (from.x + 1) * constants_1.SPACE, constants_1.DOT_SIZE - constants_1.PADDING + (from.y + 1) * constants_1.SPACE);
+  ctx.lineTo(constants_1.DOT_SIZE - constants_1.PADDING + (to.x + 1) * constants_1.SPACE, constants_1.DOT_SIZE - constants_1.PADDING + (to.y + 1) * constants_1.SPACE);
+  ctx.stroke();
+};
+
+exports.drawLine = drawLine;
+
+var drawDot = function drawDot(ctx, _a) {
+  var x = _a.x,
+      y = _a.y;
+  ctx.fillRect(constants_1.DOT_SIZE / 2 - constants_1.PADDING + (x + 1) * constants_1.SPACE, constants_1.DOT_SIZE / 2 - constants_1.PADDING + (y + 1) * constants_1.SPACE, constants_1.DOT_SIZE, constants_1.DOT_SIZE);
+};
+
+exports.drawDot = drawDot;
+},{"./constants":"constants.ts"}],"app.ts":[function(require,module,exports) {
+"use strict";
+
 var __values = this && this.__values || function (o) {
   var s = typeof Symbol === "function" && Symbol.iterator,
       m = s && o[s],
@@ -174,22 +214,25 @@ var __spreadArray = this && this.__spreadArray || function (to, from, pack) {
 
 var e_1, _a, e_2, _b, e_3, _c, e_4, _d, e_5, _e;
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var draw_1 = require("./draw");
+
 var board = {};
 var canvas = document.getElementById("input");
 var ctx = canvas.getContext("2d");
-var SPACE = 60;
-var DOT_SIZE = 10;
-var PADDING = 30;
 var joins = {};
 var lines = new Set();
 var path = new Set();
 ctx.lineWidth = 1; // HARDCODE JOINS
 
-for (var x_1 = 0; x_1 <= 4; x_1++) {
-  for (var y_1 = 0; y_1 <= 4; y_1++) {
-    joins[x_1 + "," + y_1] = {
-      x: x_1,
-      y: y_1,
+for (var x = 0; x <= 4; x++) {
+  for (var y = 0; y <= 4; y++) {
+    joins[x + "," + y] = {
+      x: x,
+      y: y,
       lines: new Set()
     };
   }
@@ -213,14 +256,14 @@ try {
         key = _h[0],
         join = _h[1];
 
-    var x_2 = join.x,
-        y_2 = join.y;
+    var x = join.x,
+        y = join.y;
     var nextLines = [findJoin({
-      x: x_2 + 1,
-      y: y_2
+      x: x + 1,
+      y: y
     }), findJoin({
-      x: x_2,
-      y: y_2 + 1
+      x: x,
+      y: y + 1
     })];
 
     try {
@@ -272,61 +315,6 @@ var END = findJoin({
   y: 0
 });
 
-try {
-  // DRAW LINES
-  for (var lines_1 = __values(lines), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
-    var line = lines_1_1.value;
-    var from = line.from,
-        to = line.to;
-    ctx.beginPath();
-    ctx.moveTo(DOT_SIZE - PADDING + (from.x + 1) * SPACE, DOT_SIZE - PADDING + (from.y + 1) * SPACE);
-    ctx.lineTo(DOT_SIZE - PADDING + (to.x + 1) * SPACE, DOT_SIZE - PADDING + (to.y + 1) * SPACE);
-    ctx.stroke();
-  }
-} catch (e_3_1) {
-  e_3 = {
-    error: e_3_1
-  };
-} finally {
-  try {
-    if (lines_1_1 && !lines_1_1.done && (_c = lines_1.return)) _c.call(lines_1);
-  } finally {
-    if (e_3) throw e_3.error;
-  }
-}
-
-try {
-  // JOINS
-  for (var _j = __values(Object.entries(joins)), _k = _j.next(); !_k.done; _k = _j.next()) {
-    var _l = __read(_k.value, 2),
-        _ = _l[0],
-        join = _l[1];
-
-    var x_3 = join.x,
-        y_3 = join.y;
-    ctx.fillRect(DOT_SIZE / 2 - PADDING + (x_3 + 1) * SPACE, DOT_SIZE / 2 - PADDING + (y_3 + 1) * SPACE, DOT_SIZE, DOT_SIZE);
-  }
-} catch (e_4_1) {
-  e_4 = {
-    error: e_4_1
-  };
-} finally {
-  try {
-    if (_k && !_k.done && (_d = _j.return)) _d.call(_j);
-  } finally {
-    if (e_4) throw e_4.error;
-  }
-}
-
-var x = START.x,
-    y = START.y;
-ctx.fillStyle = "blue";
-ctx.fillRect(DOT_SIZE / 2 - PADDING + (x + 1) * SPACE, DOT_SIZE / 2 - PADDING + (y + 1) * SPACE, DOT_SIZE, DOT_SIZE);
-var x = END.x,
-    y = END.y;
-ctx.fillStyle = "yellow";
-ctx.fillRect(DOT_SIZE / 2 - PADDING + (x + 1) * SPACE, DOT_SIZE / 2 - PADDING + (y + 1) * SPACE, DOT_SIZE, DOT_SIZE);
-
 var getOtherJoinInLine = function getOtherJoinInLine(line, join) {
   if (join !== line.from && join !== line.to) {
     alert(12);
@@ -342,10 +330,7 @@ var getOtherJoinInLine = function getOtherJoinInLine(line, join) {
   }
 };
 
-ctx.fillStyle = "black";
-var solved = false;
-
-var getNextJoin = function getNextJoin(join) {
+var getNextLine = function getNextLine(join) {
   var taken = [];
   path.forEach(function (line) {
     taken.push(line.from);
@@ -358,8 +343,6 @@ var getNextJoin = function getNextJoin(join) {
   var lines = __spreadArray([], __read(join.lines), false).filter(function (line) {
     return !path.has(line);
   }).filter(function (line) {
-    console.log(join, line);
-
     if (taken.includes(line.from)) {
       return false;
     }
@@ -377,32 +360,74 @@ var getNextJoin = function getNextJoin(join) {
     return;
   }
 
-  path.add(line);
-  return getOtherJoinInLine(line, join);
+  return line;
 };
 
 var next = START;
 
-for (var x_4 = 0; x_4 <= 12; x_4++) {
-  next = getNextJoin(next);
+for (var x = 0; x <= 12; x++) {
+  var line = getNextLine(next);
+  path.add(line);
+
+  try {
+    next = getOtherJoinInLine(line, next);
+  } catch (e) {
+    break;
+  }
 
   if (!next) {
-    alert("done");
-    x_4 = 22;
+    break;
   }
 }
 
+try {
+  // DRAW LINES
+  for (var lines_1 = __values(lines), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
+    var line = lines_1_1.value;
+    (0, draw_1.drawLine)(ctx, line);
+  }
+} catch (e_3_1) {
+  e_3 = {
+    error: e_3_1
+  };
+} finally {
+  try {
+    if (lines_1_1 && !lines_1_1.done && (_c = lines_1.return)) _c.call(lines_1);
+  } finally {
+    if (e_3) throw e_3.error;
+  }
+}
+
+try {
+  for (var _j = __values(Object.entries(joins)), _k = _j.next(); !_k.done; _k = _j.next()) {
+    var _l = __read(_k.value, 2),
+        _ = _l[0],
+        join = _l[1];
+
+    (0, draw_1.drawDot)(ctx, join);
+  }
+} catch (e_4_1) {
+  e_4 = {
+    error: e_4_1
+  };
+} finally {
+  try {
+    if (_k && !_k.done && (_d = _j.return)) _d.call(_j);
+  } finally {
+    if (e_4) throw e_4.error;
+  }
+}
+
+ctx.fillStyle = "blue";
+(0, draw_1.drawDot)(ctx, START);
+ctx.fillStyle = "yellow";
+(0, draw_1.drawDot)(ctx, END);
 ctx.strokeStyle = "lime";
 
 try {
   for (var path_1 = __values(path), path_1_1 = path_1.next(); !path_1_1.done; path_1_1 = path_1.next()) {
     var line = path_1_1.value;
-    var from = line.from,
-        to = line.to;
-    ctx.beginPath();
-    ctx.moveTo(DOT_SIZE - PADDING + (from.x + 1) * SPACE, DOT_SIZE - PADDING + (from.y + 1) * SPACE);
-    ctx.lineTo(DOT_SIZE - PADDING + (to.x + 1) * SPACE, DOT_SIZE - PADDING + (to.y + 1) * SPACE);
-    ctx.stroke();
+    (0, draw_1.drawLine)(ctx, line);
   }
 } catch (e_5_1) {
   e_5 = {
@@ -415,7 +440,7 @@ try {
     if (e_5) throw e_5.error;
   }
 }
-},{}],"../../../../../usr/local/lib/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./draw":"draw.ts"}],"../../../../../usr/local/lib/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
