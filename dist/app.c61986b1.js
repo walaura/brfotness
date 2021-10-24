@@ -127,7 +127,7 @@ exports.PADDING = exports.DOT_SIZE = exports.SPACE = void 0;
 exports.SPACE = 60;
 exports.DOT_SIZE = 10;
 exports.PADDING = 30;
-},{}],"draw.ts":[function(require,module,exports) {
+},{}],"draw/helpers.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -135,7 +135,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.drawDot = exports.drawLine = void 0;
 
-var constants_1 = require("./constants");
+var constants_1 = require("../constants");
 
 var drawLine = function drawLine(ctx, _a) {
   var from = _a.from,
@@ -155,8 +155,162 @@ var drawDot = function drawDot(ctx, _a) {
 };
 
 exports.drawDot = drawDot;
-},{"./constants":"constants.ts"}],"app.ts":[function(require,module,exports) {
+},{"../constants":"constants.ts"}],"draw/board.ts":[function(require,module,exports) {
 "use strict";
+
+var __values = this && this.__values || function (o) {
+  var s = typeof Symbol === "function" && Symbol.iterator,
+      m = s && o[s],
+      i = 0;
+  if (m) return m.call(o);
+  if (o && typeof o.length === "number") return {
+    next: function next() {
+      if (o && i >= o.length) o = void 0;
+      return {
+        value: o && o[i++],
+        done: !o
+      };
+    }
+  };
+  throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+
+var __read = this && this.__read || function (o, n) {
+  var m = typeof Symbol === "function" && o[Symbol.iterator];
+  if (!m) return o;
+  var i = m.call(o),
+      r,
+      ar = [],
+      e;
+
+  try {
+    while ((n === void 0 || n-- > 0) && !(r = i.next()).done) {
+      ar.push(r.value);
+    }
+  } catch (error) {
+    e = {
+      error: error
+    };
+  } finally {
+    try {
+      if (r && !r.done && (m = i["return"])) m.call(i);
+    } finally {
+      if (e) throw e.error;
+    }
+  }
+
+  return ar;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.drawBoard = void 0;
+
+var helpers_1 = require("./helpers");
+
+var getCanvas = function getCanvas() {
+  var canvas = document.createElement("canvas");
+  document.querySelector("x-canvas").appendChild(canvas);
+  canvas.width = 400;
+  canvas.height = 400;
+  var ctx = canvas.getContext("2d");
+  ctx.lineWidth = 1;
+  return ctx;
+};
+
+var drawBoard = function drawBoard(_a) {
+  var e_1, _b, e_2, _c, e_3, _d;
+
+  var lines = _a.lines,
+      joins = _a.joins,
+      start = _a.start,
+      end = _a.end,
+      path = _a.path;
+  var ctx = getCanvas();
+
+  try {
+    // DRAW LINES
+    for (var lines_1 = __values(lines), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
+      var line = lines_1_1.value;
+      (0, helpers_1.drawLine)(ctx, line);
+    }
+  } catch (e_1_1) {
+    e_1 = {
+      error: e_1_1
+    };
+  } finally {
+    try {
+      if (lines_1_1 && !lines_1_1.done && (_b = lines_1.return)) _b.call(lines_1);
+    } finally {
+      if (e_1) throw e_1.error;
+    }
+  }
+
+  try {
+    for (var _e = __values(Object.entries(joins)), _f = _e.next(); !_f.done; _f = _e.next()) {
+      var _g = __read(_f.value, 2),
+          _ = _g[0],
+          join = _g[1];
+
+      (0, helpers_1.drawDot)(ctx, join);
+    }
+  } catch (e_2_1) {
+    e_2 = {
+      error: e_2_1
+    };
+  } finally {
+    try {
+      if (_f && !_f.done && (_c = _e.return)) _c.call(_e);
+    } finally {
+      if (e_2) throw e_2.error;
+    }
+  }
+
+  ctx.fillStyle = "blue";
+  (0, helpers_1.drawDot)(ctx, start);
+  ctx.fillStyle = "yellow";
+  (0, helpers_1.drawDot)(ctx, end);
+  ctx.strokeStyle = "lime";
+  ctx.lineWidth = 10;
+
+  try {
+    for (var path_1 = __values(path), path_1_1 = path_1.next(); !path_1_1.done; path_1_1 = path_1.next()) {
+      var line = path_1_1.value;
+      (0, helpers_1.drawLine)(ctx, line);
+    }
+  } catch (e_3_1) {
+    e_3 = {
+      error: e_3_1
+    };
+  } finally {
+    try {
+      if (path_1_1 && !path_1_1.done && (_d = path_1.return)) _d.call(path_1);
+    } finally {
+      if (e_3) throw e_3.error;
+    }
+  }
+};
+
+exports.drawBoard = drawBoard;
+},{"./helpers":"draw/helpers.ts"}],"app.ts":[function(require,module,exports) {
+"use strict";
+
+var __assign = this && this.__assign || function () {
+  __assign = Object.assign || function (t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+      s = arguments[i];
+
+      for (var p in s) {
+        if (Object.prototype.hasOwnProperty.call(s, p)) t[p] = s[p];
+      }
+    }
+
+    return t;
+  };
+
+  return __assign.apply(this, arguments);
+};
 
 var __values = this && this.__values || function (o) {
   var s = typeof Symbol === "function" && Symbol.iterator,
@@ -212,21 +366,16 @@ var __spreadArray = this && this.__spreadArray || function (to, from, pack) {
   return to.concat(ar || Array.prototype.slice.call(from));
 };
 
-var e_1, _a, e_2, _b, e_3, _c, e_4, _d, e_5, _e;
+var e_1, _a, e_2, _b;
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var draw_1 = require("./draw");
+var board_1 = require("./draw/board");
 
-var board = {};
-var canvas = document.getElementById("input");
-var ctx = canvas.getContext("2d");
 var joins = {};
-var lines = new Set();
-var path = new Set();
-ctx.lineWidth = 1; // HARDCODE JOINS
+var lines = new Set(); // HARDCODE JOINS
 
 for (var x = 0; x <= 4; x++) {
   for (var y = 0; y <= 4; y++) {
@@ -251,10 +400,10 @@ var findJoin = function findJoin(_a) {
 
 try {
   // HC LINES
-  for (var _f = __values(Object.entries(joins)), _g = _f.next(); !_g.done; _g = _f.next()) {
-    var _h = __read(_g.value, 2),
-        key = _h[0],
-        join = _h[1];
+  for (var _c = __values(Object.entries(joins)), _d = _c.next(); !_d.done; _d = _c.next()) {
+    var _e = __read(_d.value, 2),
+        key = _e[0],
+        join = _e[1];
 
     var x = join.x,
         y = join.y;
@@ -300,7 +449,7 @@ try {
   };
 } finally {
   try {
-    if (_g && !_g.done && (_a = _f.return)) _a.call(_f);
+    if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
   } finally {
     if (e_1) throw e_1.error;
   }
@@ -330,7 +479,7 @@ var getOtherJoinInLine = function getOtherJoinInLine(line, join) {
   }
 };
 
-var getNextLine = function getNextLine(join) {
+var getNextLines = function getNextLines(path, join) {
   var taken = [];
   path.forEach(function (line) {
     taken.push(line.from);
@@ -341,7 +490,7 @@ var getNextLine = function getNextLine(join) {
   });
 
   var lines = __spreadArray([], __read(join.lines), false).filter(function (line) {
-    return !path.has(line);
+    return !path.includes(line);
   }).filter(function (line) {
     if (taken.includes(line.from)) {
       return false;
@@ -354,93 +503,149 @@ var getNextLine = function getNextLine(join) {
     return true;
   });
 
-  var line = lines[0];
-
-  if (line == null) {
-    return;
-  }
-
-  return line;
+  return lines;
 };
 
-var next = START;
-
-for (var x = 0; x <= 12; x++) {
-  var line = getNextLine(next);
-  path.add(line);
-
-  try {
-    next = getOtherJoinInLine(line, next);
-  } catch (e) {
-    break;
-  }
-
-  if (!next) {
-    break;
-  }
-}
-
-try {
-  // DRAW LINES
-  for (var lines_1 = __values(lines), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
-    var line = lines_1_1.value;
-    (0, draw_1.drawLine)(ctx, line);
-  }
-} catch (e_3_1) {
-  e_3 = {
-    error: e_3_1
+var paths = getNextLines([], START).map(function (line) {
+  return {
+    lines: [line],
+    at: getOtherJoinInLine(line, START),
+    isFinished: false,
+    isSolved: false
   };
-} finally {
+});
+
+var loop = function loop() {
+  var e_3, _a, e_4, _b;
+
+  var nextPaths = [];
+
   try {
-    if (lines_1_1 && !lines_1_1.done && (_c = lines_1.return)) _c.call(lines_1);
+    for (var paths_1 = __values(paths), paths_1_1 = paths_1.next(); !paths_1_1.done; paths_1_1 = paths_1.next()) {
+      var path = paths_1_1.value;
+
+      if (path.isFinished) {
+        nextPaths.push(path);
+        continue;
+      }
+
+      if (path.isSolved) {
+        nextPaths.push(path);
+        continue;
+      }
+
+      var lines_2 = getNextLines(path.lines, path.at);
+
+      if (lines_2.length === 0) {
+        nextPaths.push(__assign(__assign({}, path), {
+          isFinished: true,
+          isSolved: false
+        }));
+        continue;
+      }
+
+      try {
+        for (var lines_1 = (e_4 = void 0, __values(lines_2)), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
+          var line = lines_1_1.value;
+          var to = getOtherJoinInLine(line, path.at);
+          nextPaths.push({
+            lines: __spreadArray(__spreadArray([], __read(path.lines), false), [line], false),
+            at: to,
+            isFinished: false,
+            isSolved: to === END
+          });
+        }
+      } catch (e_4_1) {
+        e_4 = {
+          error: e_4_1
+        };
+      } finally {
+        try {
+          if (lines_1_1 && !lines_1_1.done && (_b = lines_1.return)) _b.call(lines_1);
+        } finally {
+          if (e_4) throw e_4.error;
+        }
+      }
+    }
+  } catch (e_3_1) {
+    e_3 = {
+      error: e_3_1
+    };
   } finally {
-    if (e_3) throw e_3.error;
+    try {
+      if (paths_1_1 && !paths_1_1.done && (_a = paths_1.return)) _a.call(paths_1);
+    } finally {
+      if (e_3) throw e_3.error;
+    }
   }
-}
 
-try {
-  for (var _j = __values(Object.entries(joins)), _k = _j.next(); !_k.done; _k = _j.next()) {
-    var _l = __read(_k.value, 2),
-        _ = _l[0],
-        join = _l[1];
+  console.log(nextPaths.length + " paths total");
+  console.log(nextPaths.length - nextPaths.filter(function (p) {
+    return p.isFinished || p.isSolved;
+  }).length + " paths TBD");
+  console.log(nextPaths.filter(function (p) {
+    return p.isFinished;
+  }).length + " finished paths");
+  console.log(nextPaths.filter(function (p) {
+    return p.isSolved;
+  }).length + " solved paths");
+  paths = nextPaths;
+};
 
-    (0, draw_1.drawDot)(ctx, join);
-  }
-} catch (e_4_1) {
-  e_4 = {
-    error: e_4_1
-  };
-} finally {
+var draw = function draw() {
+  var e_5, _a;
+
+  document.querySelector("x-canvas").innerHTML = "";
+
   try {
-    if (_k && !_k.done && (_d = _j.return)) _d.call(_j);
-  } finally {
-    if (e_4) throw e_4.error;
-  }
-}
+    for (var _b = __values(paths.sort(function (a, b) {
+      return a.lines.length - b.lines.length;
+    })), _c = _b.next(); !_c.done; _c = _b.next()) {
+      var path = _c.value;
 
-ctx.fillStyle = "blue";
-(0, draw_1.drawDot)(ctx, START);
-ctx.fillStyle = "yellow";
-(0, draw_1.drawDot)(ctx, END);
-ctx.strokeStyle = "lime";
+      if (path.isSolved !== true) {
+        continue;
+      }
 
-try {
-  for (var path_1 = __values(path), path_1_1 = path_1.next(); !path_1_1.done; path_1_1 = path_1.next()) {
-    var line = path_1_1.value;
-    (0, draw_1.drawLine)(ctx, line);
-  }
-} catch (e_5_1) {
-  e_5 = {
-    error: e_5_1
-  };
-} finally {
-  try {
-    if (path_1_1 && !path_1_1.done && (_e = path_1.return)) _e.call(path_1);
+      console.log(path);
+      (0, board_1.drawBoard)({
+        lines: lines,
+        joins: joins,
+        path: new Set(path.lines),
+        start: START,
+        end: END
+      });
+    }
+  } catch (e_5_1) {
+    e_5 = {
+      error: e_5_1
+    };
   } finally {
-    if (e_5) throw e_5.error;
+    try {
+      if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+    } finally {
+      if (e_5) throw e_5.error;
+    }
   }
-}
-},{"./draw":"draw.ts"}],"../../../../../usr/local/lib/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+};
+
+var $next = document.createElement("button");
+$next.innerText = "next";
+
+$next.onclick = function () {
+  loop();
+};
+
+document.querySelector("x-tools").appendChild($next);
+var $draw = document.createElement("button");
+$draw.innerText = "draw";
+
+$draw.onclick = function () {
+  draw();
+};
+
+document.querySelector("x-tools").appendChild($draw);
+},{"./draw/board":"draw/board.ts"}],"../../../../../usr/local/lib/node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;

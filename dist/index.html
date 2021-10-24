@@ -1,12 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <title>My First Parcel App</title>
     <script type="module" src="/app.c61986b1.js"></script>
+    <style>* {
+        margin: 0;
+        padding: 0;
+      }
+      x-tools {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: grey;
+        padding: 12px;
+        width: 100%;
+        display: block;
+      }
+      x-canvas canvas {
+        border: 2px solid black;
+        width: 200px;
+        height: 200px;
+        float: left;
+      }</style>
   </head>
   <body>
-    <canvas width="600" height="600" id="input"></canvas>
-    <h1>Hello, World!</h1>
+    <x-tools> </x-tools>
+    <x-canvas> </x-canvas>
   </body>
 </html>

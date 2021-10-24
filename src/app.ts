@@ -1,16 +1,8 @@
-import { drawDot, drawLine } from "./draw";
-import { DOT_SIZE, Join, JoinPointer, Line, PADDING, SPACE } from "./constants";
+import { Join, Joins, JoinPointer, Line, Board } from "./constants";
+import { drawBoard } from "./draw/board";
 
-let board = {};
-
-const canvas = document.getElementById("input") as HTMLCanvasElement;
-const ctx = canvas.getContext("2d");
-
-const joins: { [key: string]: Join } = {};
+const joins: Joins = {};
 const lines: Set<Line> = new Set();
-const path: Set<Line> = new Set();
-
-ctx.lineWidth = 1;
 
 // HARDCODE JOINS
 for (let x = 0; x <= 4; x++) {
@@ -66,16 +58,15 @@ const getOtherJoinInLine = (line: Line, join: Join): Join => {
   }
 };
 
-const getNextLine = (join: Join) => {
+const getNextLines = (path: Line[], join: Join) => {
   let taken: Join[] = [];
   path.forEach((line) => {
     taken.push(line.from);
     taken.push(line.to);
   });
   taken = taken.filter((j) => j !== join);
-
   const lines = [...join.lines]
-    .filter((line) => !path.has(line))
+    .filter((line) => !path.includes(line))
     .filter((line) => {
       if (taken.includes(line.from)) {
         return false;
@@ -85,40 +76,96 @@ const getNextLine = (join: Join) => {
       }
       return true;
     });
-  let line = lines[0];
-  if (line == null) {
-    return;
-  }
-  return line;
+  return lines;
 };
 
-let next = START;
-for (let x = 0; x <= 12; x++) {
-  let line = getNextLine(next);
-  path.add(line);
-  try {
-    next = getOtherJoinInLine(line, next);
-  } catch (e) {
-    break;
-  }
-  if (!next) {
-    break;
-  }
-}
+type Path = {
+  lines: Line[];
+  at: Join;
+  isFinished: boolean;
+  isSolved: boolean;
+};
 
-// DRAW LINES
-for (let line of lines) {
-  drawLine(ctx, line);
-}
-for (let [_, join] of Object.entries(joins)) {
-  drawDot(ctx, join);
-}
-ctx.fillStyle = "blue";
-drawDot(ctx, START);
-ctx.fillStyle = "yellow";
-drawDot(ctx, END);
+let paths: Path[] = getNextLines([], START).map((line) => {
+  return {
+    lines: [line],
+    at: getOtherJoinInLine(line, START),
+    isFinished: false,
+    isSolved: false,
+  };
+});
+const loop = () => {
+  const nextPaths = [];
+  for (let path of paths) {
+    if (path.isFinished) {
+      nextPaths.push(path);
+      continue;
+    }
+    if (path.isSolved) {
+      nextPaths.push(path);
+      continue;
+    }
+    let lines = getNextLines(path.lines, path.at);
+    if (lines.length === 0) {
+      nextPaths.push({
+        ...path,
+        isFinished: true,
+        isSolved: false,
+      });
+      continue;
+    }
 
-ctx.strokeStyle = "lime";
-for (let line of path) {
-  drawLine(ctx, line);
-}
+    for (let line of lines) {
+      const to = getOtherJoinInLine(line, path.at);
+      nextPaths.push({
+        lines: [...path.lines, line],
+        at: to,
+        isFinished: false,
+        isSolved: to === END,
+      });
+    }
+  }
+
+  console.log(`${nextPaths.length} paths total`);
+  console.log(
+    `${
+      nextPaths.length -
+      nextPaths.filter((p) => p.isFinished || p.isSolved).length
+    } paths TBD`
+  );
+  console.log(`${nextPaths.filter((p) => p.isFinished).length} finished paths`);
+  console.log(`${nextPaths.filter((p) => p.isSolved).length} solved paths`);
+
+  paths = nextPaths;
+};
+
+const draw = () => {
+  document.querySelector("x-canvas").innerHTML = "";
+  for (let path of paths.sort((a, b) => a.lines.length - b.lines.length)) {
+    if (path.isSolved !== true) {
+      continue;
+    }
+    console.log(path);
+    drawBoard({
+      lines,
+      joins,
+      path: new Set(path.lines),
+      start: START,
+      end: END,
+    });
+  }
+};
+
+const $next = document.createElement("button");
+$next.innerText = "next";
+$next.onclick = () => {
+  loop();
+};
+document.querySelector("x-tools").appendChild($next);
+
+const $draw = document.createElement("button");
+$draw.innerText = "draw";
+$draw.onclick = () => {
+  draw();
+};
+document.querySelector("x-tools").appendChild($draw);
