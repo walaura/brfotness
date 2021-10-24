@@ -164,14 +164,21 @@ exports.drawDot = exports.drawLine = void 0;
 
 var constants_1 = require("../constants");
 
-var drawLine = function drawLine(ctx, _a) {
+var drawLine = function drawLine(ctx, color, _a) {
+  if (color === void 0) {
+    color = "black";
+  }
+
   var _b = __read(_a.points, 2),
       from = _b[0],
       to = _b[1];
 
+  ctx.lineWidth = 10;
+  ctx.strokeStyle = color;
   ctx.beginPath();
   ctx.moveTo(constants_1.DOT_SIZE - constants_1.PADDING + (from.x + 1) * constants_1.SPACE, constants_1.DOT_SIZE - constants_1.PADDING + (from.y + 1) * constants_1.SPACE);
   ctx.lineTo(constants_1.DOT_SIZE - constants_1.PADDING + (to.x + 1) * constants_1.SPACE, constants_1.DOT_SIZE - constants_1.PADDING + (to.y + 1) * constants_1.SPACE);
+  ctx.closePath();
   ctx.stroke();
 };
 
@@ -269,13 +276,13 @@ var drawBoardAt = function drawBoardAt(ctx, _a) {
       start = _a.start,
       end = _a.end,
       path = _a.path;
-  ctx.lineWidth = 1;
+  ctx.clearRect(0, 0, 400, 400);
 
   try {
     // DRAW LINES
     for (var lines_1 = __values(lines), lines_1_1 = lines_1.next(); !lines_1_1.done; lines_1_1 = lines_1.next()) {
       var line = lines_1_1.value;
-      (0, helpers_1.drawLine)(ctx, line);
+      (0, helpers_1.drawLine)(ctx, "black", line);
     }
   } catch (e_1_1) {
     e_1 = {
@@ -313,13 +320,12 @@ var drawBoardAt = function drawBoardAt(ctx, _a) {
   (0, helpers_1.drawDot)(ctx, start);
   ctx.fillStyle = "yellow";
   (0, helpers_1.drawDot)(ctx, end);
-  ctx.strokeStyle = "lime";
   ctx.lineWidth = 10;
 
   try {
     for (var path_1 = __values(path), path_1_1 = path_1.next(); !path_1_1.done; path_1_1 = path_1.next()) {
       var line = path_1_1.value;
-      (0, helpers_1.drawLine)(ctx, line);
+      (0, helpers_1.drawLine)(ctx, "lime", line);
     }
   } catch (e_3_1) {
     e_3 = {
@@ -332,16 +338,49 @@ var drawBoardAt = function drawBoardAt(ctx, _a) {
       if (e_3) throw e_3.error;
     }
   }
+
+  ctx.lineWidth = 1;
 };
 
 exports.drawBoardAt = drawBoardAt;
 },{"./helpers":"draw/helpers.ts"}],"draw/input.ts":[function(require,module,exports) {
 "use strict";
 
+var __read = this && this.__read || function (o, n) {
+  var m = typeof Symbol === "function" && o[Symbol.iterator];
+  if (!m) return o;
+  var i = m.call(o),
+      r,
+      ar = [],
+      e;
+
+  try {
+    while ((n === void 0 || n-- > 0) && !(r = i.next()).done) {
+      ar.push(r.value);
+    }
+  } catch (error) {
+    e = {
+      error: error
+    };
+  } finally {
+    try {
+      if (r && !r.done && (m = i["return"])) m.call(i);
+    } finally {
+      if (e) throw e.error;
+    }
+  }
+
+  return ar;
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.startInput = void 0;
+
+var helpers_1 = require("./helpers");
+
+var constants_1 = require("./../constants");
 
 var board_1 = require("./board");
 
@@ -351,23 +390,59 @@ var startInput = function startInput() {
       lines = _a.lines,
       start = _a.start,
       end = _a.end;
+
+  var findJoin = function findJoin(_a) {
+    var x = _a.x,
+        y = _a.y;
+
+    if (joins[x + "," + y] != null) {
+      return joins[x + "," + y];
+    } else {
+      return null;
+    }
+  };
+
   var $input = (0, board_1.getCanvas)("input");
   var ctx = $input.getContext("2d");
-  var mouseIn = false;
   var ghostLine = null;
-  $input.addEventListener("mousemove", function (ev) {//console.log(ev);
-  });
-  $input.addEventListener("mouseenter", function (ev) {
-    mouseIn = true;
-    requestAnimationFrame(draw);
-  });
-  $input.addEventListener("mouseleave", function (ev) {
-    mouseIn = false;
+  $input.addEventListener("mousemove", function (ev) {
+    var _a = __read([(ev.offsetX - constants_1.PADDING) / constants_1.SPACE - 0.0, (ev.offsetY - constants_1.PADDING) / constants_1.SPACE - 0.0], 2),
+        rawX = _a[0],
+        rawY = _a[1];
+
+    var _b = __read([rawX, rawY].map(Math.floor), 2),
+        x = _b[0],
+        y = _b[1];
+
+    var points;
+
+    if (rawX - x > rawY - y) {
+      points = [findJoin({
+        x: x,
+        y: y
+      }), findJoin({
+        x: x + 1,
+        y: y
+      })];
+    } else {
+      points = [findJoin({
+        x: x,
+        y: y
+      }), findJoin({
+        x: x,
+        y: y + 1
+      })];
+    }
+
+    if (!points.includes(null)) {
+      ghostLine = {
+        points: points
+      };
+    }
   });
   document.querySelector("x-input").appendChild($input);
 
   var draw = function draw() {
-    console.log("drawing");
     (0, board_1.drawBoardAt)(ctx, {
       lines: lines,
       joins: joins,
@@ -376,16 +451,18 @@ var startInput = function startInput() {
       end: end
     });
 
-    if (mouseIn) {
-      requestAnimationFrame(draw);
+    if (ghostLine) {
+      (0, helpers_1.drawLine)(ctx, "blue", ghostLine);
     }
+
+    requestAnimationFrame(draw);
   };
 
   requestAnimationFrame(draw);
 };
 
 exports.startInput = startInput;
-},{"./board":"draw/board.ts"}],"app.ts":[function(require,module,exports) {
+},{"./helpers":"draw/helpers.ts","./../constants":"constants.ts","./board":"draw/board.ts"}],"app.ts":[function(require,module,exports) {
 "use strict";
 
 var __assign = this && this.__assign || function () {
