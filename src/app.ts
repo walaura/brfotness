@@ -3,7 +3,7 @@ import { Join, Line } from "./constants";
 import { drawBoard } from "./draw/board";
 import { startInput } from "./draw/input";
 
-const board = getBoard();
+let board = getBoard();
 
 const getOtherJoinInLine = (line: Line, join: Join): Join => {
   if (!line.points.includes(join)) {
@@ -92,7 +92,17 @@ const loop = () => {
   paths = nextPaths;
 };
 
-startInput(board);
+startInput(board, (newBoard) => {
+  board = newBoard;
+  paths = getNextLines([], board.start).map((line) => {
+    return {
+      lines: [line],
+      at: getOtherJoinInLine(line, board.start),
+      isFinished: false,
+      isSolved: false,
+    };
+  });
+});
 
 const draw = () => {
   document.querySelector("x-canvas").innerHTML = "";

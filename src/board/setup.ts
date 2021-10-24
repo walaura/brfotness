@@ -27,6 +27,9 @@ const setupJoin = (joins: Joins, { x, y }: JoinPointer): [Join, Joins] => {
 const addJoinReferences = (
   board: InputBoardWithJoinsAndLines
 ): InputBoardWithJoinsAndLines => {
+  for (let [_, join] of Object.entries(board.joins)) {
+    join.lines = new Set();
+  }
   for (let line of board.lines) {
     line.points[0].lines.add(line);
     line.points[1].lines.add(line);
@@ -62,11 +65,35 @@ const serializeLines = (lines: Lines): SerializedLines =>
   ]);
 
 export const getBoard = (): InputBoardWithJoinsAndLines => {
-  let board = addJoinReferences(setUpInitialBoard(STARTING_BOARD));
+  let board = addJoinReferences(
+    setUpInitialBoard(STARTING_BOARD as SerializedLines)
+  );
   console.log(board);
   const findJoin = findJoinAtBoard(board);
   board.start = findJoin({ x: 2, y: 2 });
   board.end = findJoin({ x: 4, y: 0 });
 
   return board;
+};
+
+export const toggleLineOnBoard = (
+  board: InputBoardWithJoinsAndLines,
+  findLine: Line
+): InputBoardWithJoinsAndLines => {
+  let newLines: Lines = new Set();
+  let wasRemoved = false;
+  for (var line of board.lines) {
+    if (line.points.every((point) => findLine.points.includes(point))) {
+      wasRemoved = true;
+    } else {
+      newLines.add(line);
+    }
+  }
+  if (!wasRemoved) {
+    newLines.add(findLine);
+  }
+  return addJoinReferences({
+    ...board,
+    lines: newLines,
+  });
 };

@@ -4,14 +4,19 @@ import {
   Join,
   JoinPointer,
   Line,
+  Lines,
   PADDING,
   SPACE,
-} from "./../constants";
+} from "../constants";
 import { InputBoard } from "../constants";
 import { getCanvas, drawBoardAt } from "./board";
+import { toggleLineOnBoard } from "../board/setup";
 
-export const startInput = (board: InputBoardWithJoinsAndLines) => {
-  const { joins, lines, start, end } = board;
+export const startInput = (
+  board: InputBoardWithJoinsAndLines,
+  onUpdate: (board: InputBoardWithJoinsAndLines) => void
+) => {
+  const { joins, start, end } = board;
 
   const findJoin = ({ x, y }: JoinPointer): Join | null => {
     if (joins[`${x},${y}`] != null) {
@@ -42,10 +47,17 @@ export const startInput = (board: InputBoardWithJoinsAndLines) => {
       };
     }
   });
+  $input.addEventListener("click", (ev) => {
+    if (!ghostLine) {
+      return;
+    }
+    board = toggleLineOnBoard(board, ghostLine);
+    onUpdate(board);
+  });
   document.querySelector("x-input").appendChild($input);
   const draw = () => {
     drawBoardAt(ctx, {
-      lines,
+      lines: board.lines,
       joins,
       path: new Set(),
       start,
