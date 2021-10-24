@@ -1,10 +1,17 @@
 import { drawLine } from "./helpers";
-import { Join, JoinPointer, Line, PADDING, SPACE } from "./../constants";
+import {
+  InputBoardWithJoinsAndLines,
+  Join,
+  JoinPointer,
+  Line,
+  PADDING,
+  SPACE,
+} from "./../constants";
 import { InputBoard } from "../constants";
 import { getCanvas, drawBoardAt } from "./board";
 
-export const startInput = () => {
-  const { joins, lines, start, end } = globalThis.input as InputBoard;
+export const startInput = (board: InputBoardWithJoinsAndLines) => {
+  const { joins, lines, start, end } = board;
 
   const findJoin = ({ x, y }: JoinPointer): Join | null => {
     if (joins[`${x},${y}`] != null) {
